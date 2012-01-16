@@ -1,0 +1,51 @@
+#!/usr/bin/php
+<?php
+
+if($_SERVER['argc'] < 2) {
+    exit(1);
+}
+$input_file = $_SERVER['argv'][1];
+if(!file_exists($input_file)) {
+    exit(2);
+}
+
+$lines = file($input_file);
+$min_weight = intval(trim(array_shift($lines)));
+$goods = array();
+$weight_arr = array();
+
+foreach($lines AS $line) {
+    if(preg_match('/^[\w\d]+\s+(\d+)\s+(\d+)$/', trim($line), $matches)) {
+        $goods[] = array(
+            'weight' => $matches[1],
+            'cost' => $matches[2],
+        );
+        $weight_arr[]  = $matches[1];
+    }
+}
+
+array_multisort($weight_arr, SORT_DESC, SORT_NUMERIC, $goods);
+
+function g($goods, $weight = 0, $cost = 0) {
+    global $min_weight;
+
+    $options = array();
+    foreach($goods AS $good) {
+        
+        $current_weight = ($weight + $good['weight']);
+        $current_cost = ($cost + $good['cost']);
+
+        if($current_weight < $min_weight) {
+            $options[] = g($goods, $current_weight, $current_cost);
+        }
+        else {
+            $options[] = $current_cost;
+        }
+        $shift = array_shift($goods);
+    }
+    return min($options);
+}
+
+fwrite(STDOUT, g($goods)."\n");
+
+?>
